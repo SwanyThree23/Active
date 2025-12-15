@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  password      String
+  avatar        String?
+  bio           String?
+  isVerified    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  sessions      Session[]
+  streams       Stream[]
+  automations   Automation[]
+  alerts        Alert[]
+  chatCommands  ChatCommand[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Stream {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  platform    StreamPlatform
+  rtmpUrl     String?
+  streamKey   String?
+  isLive      Boolean      @default(false)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  viewerCount Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Automation {
+  id          String           @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  trigger     AutomationTrigger
+  action      Json
+  isEnabled   Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Alert {
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  type        AlertType
+  config      Json
+  isEnabled   Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ChatCommand {
+  id          String   @id @default(cuid())
+  userId      String
+  command     String
+  response    String
+  cooldown    Int      @default(5)
+  isEnabled   Boolean  @default(true)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, command])
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum StreamPlatform {
+  TWITCH
+  YOUTUBE
+  KICK
+  CUSTOM
+}
+
+enum AutomationTrigger {
+  NEW_FOLLOWER
+  NEW_SUBSCRIBER
+  DONATION
+  CHAT_MESSAGE
+  STREAM_START
+  STREAM_END
+  SCHEDULED
+}
+
+enum AlertType {
+  FOLLOWER
+  SUBSCRIBER
+  DONATION
+  RAID
+  HOST
+  BITS
+  CUSTOM
+}

@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cyber-dark: #0a0a0f;
+  --cyber-darker: #050508;
+  --cyber-purple: #b829dd;
+  --cyber-pink: #ff2a6d;
+  --cyber-blue: #05d9e8;
+  --cyber-cyan: #01ffc3;
+  --cyber-yellow: #f9f002;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--cyber-darker);
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cyber-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cyber-purple);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyber-blue);
+}
+
+/* Cyber input styling */
+@layer components {
+  .cyber-input {
+    @apply w-full px-4 py-3 bg-cyber-dark/50 border border-cyber-purple/30
+           rounded-lg text-white placeholder-gray-500 font-mono
+           focus:outline-none focus:border-cyber-blue focus:ring-1 focus:ring-cyber-blue
+           transition-all duration-300;
+  }
+
+  .cyber-input:focus {
+    box-shadow: 0 0 15px rgba(5, 217, 232, 0.3);
+  }
+
+  .cyber-button {
+    @apply relative px-8 py-3 bg-gradient-to-r from-cyber-purple to-cyber-pink
+           text-white font-cyber font-bold uppercase tracking-wider
+           rounded-lg overflow-hidden transition-all duration-300
+           hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .cyber-button::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-cyber-blue to-cyber-cyan
+           opacity-0 transition-opacity duration-300;
+  }
+
+  .cyber-button:hover::before {
+    @apply opacity-100;
+  }
+
+  .cyber-button span {
+    @apply relative z-10;
+  }
+
+  .cyber-card {
+    @apply relative bg-cyber-dark/80 border border-cyber-purple/30 rounded-xl
+           backdrop-blur-sm overflow-hidden;
+  }
+
+  .cyber-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-cyber-purple/5 to-transparent;
+  }
+
+  .neon-text {
+    text-shadow: 0 0 5px var(--cyber-blue),
+                 0 0 10px var(--cyber-blue),
+                 0 0 20px var(--cyber-blue);
+  }
+
+  .glitch-text {
+    position: relative;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .glitch-text::before {
+    animation: glitch-1 0.5s infinite;
+    color: var(--cyber-pink);
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+  }
+
+  .glitch-text::after {
+    animation: glitch-2 0.5s infinite;
+    color: var(--cyber-blue);
+    clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+  }
+}
+
+@keyframes glitch-1 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); }
+  40% { transform: translate(-3px, -3px); }
+  60% { transform: translate(3px, 3px); }
+  80% { transform: translate(3px, -3px); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(3px, -3px); }
+  40% { transform: translate(3px, 3px); }
+  60% { transform: translate(-3px, -3px); }
+  80% { transform: translate(-3px, 3px); }
+}
+
+/* Animated grid background */
+.cyber-grid-bg {
+  background-image:
+    linear-gradient(rgba(5, 217, 232, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5, 217, 232, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
+}
