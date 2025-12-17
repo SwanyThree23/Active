@@ -8,6 +8,10 @@ import { rateLimit } from 'express-rate-limit'
 
 import authRoutes from './routes/auth.js'
 import userRoutes from './routes/user.js'
+import streamRoutes from './routes/stream.js'
+import automationRoutes from './routes/automation.js'
+import alertRoutes from './routes/alert.js'
+import chatCommandRoutes from './routes/chatCommand.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
 dotenv.config()
@@ -47,6 +51,10 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/streams', streamRoutes)
+app.use('/api/automations', automationRoutes)
+app.use('/api/alerts', alertRoutes)
+app.use('/api/commands', chatCommandRoutes)
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
