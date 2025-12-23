@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "swanythree": {
+      "command": "npx",
+      "args": ["-y", "@swanythree/mcp-server"],
+      "env": {
+        "SWANYTHREE_API_URL": "http://localhost:3000",
+        "SWANYTHREE_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}

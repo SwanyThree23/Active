@@ -1,0 +1,28 @@
+{
+  "name": "@swanythree/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for SwanyThree - Claude Desktop Integration",
+  "main": "index.js",
+  "bin": {
+    "swanythree-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "swanythree",
+    "ai",
+    "streaming"
+  ],
+  "author": "SwanyThree",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
