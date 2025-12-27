@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  username     String    @unique
+  avatarUrl    String?   @map("avatar_url")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  streams            Stream[]
+  chatMessages       ChatMessage[]
+  tasks              Task[]
+  notebooks          Notebook[]
+  sessions           Session[]
+  workflowExecutions WorkflowExecution[]
+
+  @@map("users")
+}
+
+model Stream {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  title        String
+  description  String?
+  status       String    @default("offline")
+  streamKey    String    @unique @map("stream_key")
+  rtmpUrl      String?   @map("rtmp_url")
+  hlsUrl       String?   @map("hls_url")
+  thumbnailUrl String?   @map("thumbnail_url")
+  category     String?
+  tags         String[]
+  startedAt    DateTime? @map("started_at")
+  endedAt      DateTime? @map("ended_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics          StreamAnalytics[]
+  chatMessages       ChatMessage[]
+  tasks              Task[]
+  workflowExecutions WorkflowExecution[]
+
+  @@map("streams")
+}
+
+model StreamAnalytics {
+  id              String   @id @default(uuid())
+  streamId        String   @map("stream_id")
+  timestamp       DateTime @default(now())
+  viewers         Int      @default(0)
+  peakViewers     Int      @default(0) @map("peak_viewers")
+  chatMessages    Int      @default(0) @map("chat_messages")
+  engagementScore Float    @default(0) @map("engagement_score")
+  sentiment       Float    @default(0)
+  avgWatchTime    Int      @default(0) @map("avg_watch_time")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  stream Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  @@map("stream_analytics")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  streamId    String   @map("stream_id")
+  userId      String   @map("user_id")
+  message     String
+  sentiment   Float?
+  isModerated Boolean  @default(false) @map("is_moderated")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  stream Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  streamId    String?   @map("stream_id")
+  userId      String?   @map("user_id")
+  agentType   String    @map("agent_type")
+  taskType    String    @map("task_type")
+  status      String    @default("pending")
+  priority    Int       @default(0)
+  input       Json?
+  output      Json?
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  stream Stream? @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("tasks")
+}
+
+model Notebook {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String
+  description String?
+  sources     Json     @default("[]")
+  synthesis   String?
+  summary     String?
+  keyInsights Json     @default("[]") @map("key_insights")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  podcasts Podcast[]
+
+  @@map("notebooks")
+}
+
+model Podcast {
+  id         String   @id @default(uuid())
+  notebookId String   @map("notebook_id")
+  title      String?
+  audioUrl   String?  @map("audio_url")
+  script     String?
+  duration   Int?
+  hostVoices Json     @default("[]") @map("host_voices")
+  status     String   @default("pending")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  notebook Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+
+  @@map("podcasts")
+}
+
+model WorkflowExecution {
+  id           String    @id @default(uuid())
+  workflowId   String    @map("workflow_id")
+  workflowName String?   @map("workflow_name")
+  streamId     String?   @map("stream_id")
+  userId       String?   @map("user_id")
+  status       String    @default("pending")
+  input        Json?
+  output       Json?
+  error        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  startedAt    DateTime? @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+
+  stream Stream? @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("workflow_executions")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  refreshToken String   @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
