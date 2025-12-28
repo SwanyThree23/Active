@@ -7,6 +7,7 @@ export { descriptClient } from './descript'
 export { beehiivClient } from './beehiiv'
 export { productHuntClient } from './producthunt'
 export { n8nClient } from './n8n'
+export { vectorDb } from './vector-db'
 
 // Integration service type
 export type IntegrationService =
@@ -19,6 +20,7 @@ export type IntegrationService =
   | 'beehiiv'
   | 'producthunt'
   | 'n8n'
+  | 'pinecone'
 
 // Integration status checker
 export async function checkIntegrationStatus(
@@ -85,6 +87,12 @@ export async function checkIntegrationStatus(
         }
         return { service, status: 'connected' }
 
+      case 'pinecone':
+        if (!process.env.PINECONE_API_KEY) {
+          return { service, status: 'disconnected', message: 'API key not configured' }
+        }
+        return { service, status: 'connected' }
+
       default:
         return { service, status: 'error', message: 'Unknown service' }
     }
@@ -115,6 +123,7 @@ export async function checkAllIntegrations(): Promise<
     'beehiiv',
     'producthunt',
     'n8n',
+    'pinecone',
   ]
 
   return Promise.all(services.map((service) => checkIntegrationStatus(service)))

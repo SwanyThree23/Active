@@ -168,3 +168,21 @@ export const requireTier = (...tiers: UserTier[]) => {
     next()
   }
 }
+
+// Alias for authenticateToken (used in admin routes)
+export const authenticateToken = authenticate
+
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string
+        id: string
+        email: string
+        role: UserRole
+        tier: UserTier
+      }
+    }
+  }
+}

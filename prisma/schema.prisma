@@ -60,6 +60,9 @@ model User {
   templates         Template[]
   newsletters       Newsletter[]
   teamMemberships   TeamMember[]
+  reviewsCreated    ReviewQueue[]  @relation("ReviewQueueUser")
+  reviewsAssigned   ReviewQueue[]  @relation("ReviewQueueReviewer")
+  feedbacks         Feedback[]
 
   @@index([email])
   @@index([tier])
@@ -121,11 +124,13 @@ model Content {
   status        ContentStatus @default(DRAFT)
   metadata      Json          @default("{}")
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  publishedAt   DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  publishedAt       DateTime?
 
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews           ReviewQueue[]
+  shadowPredictions ShadowPrediction[]
 
   @@index([userId])
   @@index([status])
@@ -275,4 +280,211 @@ model SystemMetrics {
   memoryUsage     Float    @default(0)
 
   @@index([timestamp])
+}
+
+// ==========================================
+// AI MVP / HITL (Human-in-the-Loop) Models
+// ==========================================
+
+enum ReviewStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum ReviewPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model ReviewQueue {
+  id              String         @id @default(cuid())
+  contentId       String
+  userId          String
+  reviewerId      String?
+
+  // AI Output Data
+  aiOutput        String         @db.Text
+  aiModel         String
+  confidenceScore Float
+
+  // Review Metadata
+  status          ReviewStatus   @default(PENDING)
+  priority        ReviewPriority @default(MEDIUM)
+  reason          String?
+  category        String?
+
+  // Review Results
+  humanFeedback   String?        @db.Text
+  corrections     Json?
+  approved        Boolean?
+
+  // Timing
+  createdAt       DateTime       @default(now())
+  assignedAt      DateTime?
+  reviewedAt      DateTime?
+
+  // Relations
+  content         Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user            User           @relation("ReviewQueueUser", fields: [userId], references: [id])
+  reviewer        User?          @relation("ReviewQueueReviewer", fields: [reviewerId], references: [id])
+  feedbackItems   Feedback[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([confidenceScore])
+  @@index([createdAt])
+  @@index([reviewerId])
+}
+
+model Feedback {
+  id              String       @id @default(cuid())
+  reviewQueueId   String?
+  contentId       String?
+  userId          String
+
+  // Feedback Data
+  type            String       // 'correction', 'rating', 'suggestion', 'report'
+  category        String?      // 'accuracy', 'tone', 'grammar', 'relevance', 'safety'
+  rating          Int?         // 1-5 scale
+  comment         String?      @db.Text
+
+  // Original vs Corrected
+  originalOutput  String?      @db.Text
+  correctedOutput String?      @db.Text
+
+  // Training Metadata
+  usedForTraining Boolean      @default(false)
+  trainingBatchId String?
+
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  reviewQueue     ReviewQueue? @relation(fields: [reviewQueueId], references: [id], onDelete: SetNull)
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([category])
+  @@index([usedForTraining])
+  @@index([createdAt])
+}
+
+model ModelMetrics {
+  id                  String   @id @default(cuid())
+  modelId             String
+  modelVersion        String
+  timestamp           DateTime @default(now())
+
+  // Performance Metrics
+  totalPredictions    Int      @default(0)
+  approvedPredictions Int      @default(0)
+  rejectedPredictions Int      @default(0)
+  escalatedPredictions Int     @default(0)
+
+  // Quality Metrics
+  avgConfidenceScore  Float    @default(0)
+  avgHumanRating      Float    @default(0)
+  accuracyRate        Float    @default(0)
+
+  // Latency Metrics
+  avgLatency          Float    @default(0)
+  p95Latency          Float    @default(0)
+  p99Latency          Float    @default(0)
+
+  // Drift Detection
+  driftScore          Float    @default(0)
+  driftDetected       Boolean  @default(false)
+
+  // Cost Metrics
+  totalTokens         Int      @default(0)
+  estimatedCost       Float    @default(0)
+
+  @@unique([modelId, modelVersion, timestamp])
+  @@index([modelId])
+  @@index([timestamp])
+  @@index([driftDetected])
+}
+
+model ShadowPrediction {
+  id                String   @id @default(cuid())
+  contentId         String
+
+  // Primary Model Output
+  primaryModel      String
+  primaryOutput     String   @db.Text
+  primaryConfidence Float
+  primaryLatency    Int
+
+  // Shadow Model Output
+  shadowModel       String
+  shadowOutput      String   @db.Text
+  shadowConfidence  Float
+  shadowLatency     Int
+
+  // Comparison Results
+  outputSimilarity  Float
+  confidenceDelta   Float
+  latencyDelta      Int
+  discrepancyFlag   Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
+
+  content           Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([primaryModel])
+  @@index([shadowModel])
+  @@index([discrepancyFlag])
+  @@index([createdAt])
+}
+
+model VectorEmbedding {
+  id              String   @id @default(cuid())
+  contentId       String?
+  sourceType      String   // 'content', 'template', 'feedback', 'document'
+  sourceId        String
+
+  // Embedding Data
+  embeddingModel  String
+  dimensions      Int
+  vectorId        String   // External vector DB ID (Pinecone, Weaviate)
+
+  // Metadata
+  metadata        Json     @default("{}")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([sourceType, sourceId])
+  @@index([sourceType])
+  @@index([vectorId])
+}
+
+model ActiveLearningQueue {
+  id              String   @id @default(cuid())
+  feedbackId      String
+
+  // Sample Data
+  inputData       String   @db.Text
+  outputData      String   @db.Text
+  correctedData   String?  @db.Text
+
+  // Selection Criteria
+  uncertaintyScore Float
+  diversityScore   Float
+  priorityScore    Float
+
+  // Processing Status
+  status          String   @default("pending") // pending, selected, processed, discarded
+  batchId         String?
+
+  createdAt       DateTime @default(now())
+  processedAt     DateTime?
+
+  @@index([status])
+  @@index([priorityScore])
+  @@index([createdAt])
 }

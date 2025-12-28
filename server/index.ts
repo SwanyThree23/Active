@@ -19,6 +19,8 @@ import templateRoutes from './routes/templates'
 import newsletterRoutes from './routes/newsletter'
 import analyticsRoutes from './routes/analytics'
 import webhookRoutes from './routes/webhooks'
+import adminRoutes from './routes/admin'
+import feedbackRoutes from './routes/feedback'
 import { setupWebSocket } from './services/websocket'
 
 dotenv.config()
@@ -66,6 +68,8 @@ app.use('/api/v1/templates', templateRoutes)
 app.use('/api/v1/newsletter', newsletterRoutes)
 app.use('/api/v1/analytics', analyticsRoutes)
 app.use('/api/v1/webhooks', webhookRoutes)
+app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/feedback', feedbackRoutes)
 
 // WebSocket setup
 setupWebSocket(io)

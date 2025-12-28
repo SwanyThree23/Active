@@ -309,3 +309,180 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     totalPages: number
   }
 }
+
+// ==========================================
+// AI MVP / HITL Types
+// ==========================================
+
+export type ReviewStatus = 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED' | 'ESCALATED'
+export type ReviewPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+
+export interface ReviewQueueItem {
+  id: string
+  contentId: string
+  userId: string
+  reviewerId?: string
+  aiOutput: string
+  aiModel: string
+  confidenceScore: number
+  status: ReviewStatus
+  priority: ReviewPriority
+  reason?: string
+  category?: string
+  humanFeedback?: string
+  corrections?: Record<string, unknown>
+  approved?: boolean
+  createdAt: Date
+  assignedAt?: Date
+  reviewedAt?: Date
+}
+
+export interface ReviewDecision {
+  action: 'auto_approve' | 'queue_review' | 'escalate' | 'auto_reject'
+  reason: string
+  priority: ReviewPriority
+}
+
+export interface AIConfidenceThresholds {
+  AUTO_APPROVE: number
+  HUMAN_REVIEW: number
+  ESCALATE: number
+  REJECT: number
+}
+
+export interface FeedbackItem {
+  id: string
+  reviewQueueId?: string
+  contentId?: string
+  userId: string
+  type: 'correction' | 'rating' | 'suggestion' | 'report'
+  category?: string
+  rating?: number
+  comment?: string
+  originalOutput?: string
+  correctedOutput?: string
+  usedForTraining: boolean
+  createdAt: Date
+}
+
+export interface ModelMetricsSnapshot {
+  modelId: string
+  modelVersion: string
+  timestamp: Date
+  totalPredictions: number
+  approvedPredictions: number
+  rejectedPredictions: number
+  escalatedPredictions: number
+  avgConfidenceScore: number
+  avgHumanRating: number
+  accuracyRate: number
+  avgLatency: number
+  p95Latency: number
+  p99Latency: number
+  driftScore: number
+  driftDetected: boolean
+  totalTokens: number
+  estimatedCost: number
+}
+
+export interface ModelHealth {
+  modelId: string
+  status: 'healthy' | 'degraded' | 'critical'
+  metrics: {
+    totalPredictions: number
+    avgConfidence: number
+    approvalRate: number
+    rejectionRate: number
+    escalationRate: number
+    avgLatency: number
+    errorRate: number
+  }
+  alerts: DriftAlert[]
+  trend: 'improving' | 'stable' | 'declining'
+}
+
+export interface DriftAlert {
+  id: string
+  modelId: string
+  type: 'confidence' | 'accuracy' | 'latency' | 'error_rate' | 'distribution'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  currentValue: number
+  baselineValue: number
+  delta: number
+  message: string
+  timestamp: Date
+}
+
+export interface ShadowPredictionResult {
+  id: string
+  contentId: string
+  primaryModel: string
+  primaryOutput: string
+  primaryConfidence: number
+  primaryLatency: number
+  shadowModel: string
+  shadowOutput: string
+  shadowConfidence: number
+  shadowLatency: number
+  outputSimilarity: number
+  confidenceDelta: number
+  latencyDelta: number
+  discrepancyFlag: boolean
+  createdAt: Date
+}
+
+export interface ActiveLearningQueueItem {
+  id: string
+  feedbackId: string
+  inputData: string
+  outputData: string
+  correctedData?: string
+  uncertaintyScore: number
+  diversityScore: number
+  priorityScore: number
+  status: 'pending' | 'selected' | 'processed' | 'discarded'
+  batchId?: string
+  createdAt: Date
+  processedAt?: Date
+}
+
+export interface TrainingBatch {
+  batchId: string
+  samples: TrainingSample[]
+  stats: {
+    total: number
+    avgPriority: number
+    avgUncertainty: number
+  }
+}
+
+export interface TrainingSample {
+  id: string
+  input: string
+  output: string
+  correctedOutput?: string
+  metadata: {
+    category?: string
+    source: string
+    confidenceScore?: number
+    feedbackRating?: number
+  }
+}
+
+export interface VectorSearchResult {
+  id: string
+  score: number
+  metadata: {
+    sourceType: string
+    sourceId: string
+    title?: string
+    contentType?: string
+    category?: string
+  }
+  content?: string
+}
+
+export interface RAGContext {
+  context: string
+  sources: VectorSearchResult[]
+}
