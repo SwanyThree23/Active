@@ -1,0 +1,21 @@
+{
+  "name": "swanybot-ultimate-server",
+  "version": "1.0.0",
+  "description": "SwanyBot Ultimate Backend API Server",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "db:migrate": "node db/migrate.js",
+    "db:seed": "node db/seed.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "node-fetch": "^3.3.2",
+    "uuid": "^10.0.0"
+  }
+}

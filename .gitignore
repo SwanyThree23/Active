@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+server/.env
+
+# Database
+server/db/*.db
+server/db/*.db-wal
+server/db/*.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+.nyc_output/
+
+# Docker
+.docker/

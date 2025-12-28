@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  swanybot:
+    build: .
+    container_name: swanybot-ultimate
+    ports:
+      - "3001:3001"
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-swanypro2026}
+      - JWT_SECRET=${JWT_SECRET:-change-this-in-production}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-https://techmunity.app.n8n.cloud}
+      - N8N_API_KEY=${N8N_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-}
+      - MCP_ACCESS_TOKEN=${MCP_ACCESS_TOKEN:-}
+      - DATABASE_PATH=/app/data/swanybot.db
+    volumes:
+      - swanybot-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: swanybot-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - swanybot
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  swanybot-data:
